@@ -1,5 +1,6 @@
 package me.rootatkali.hey.rest;
 
+import lombok.extern.slf4j.Slf4j;
 import me.rootatkali.hey.HeyApplication;
 import me.rootatkali.hey.model.Login;
 import me.rootatkali.hey.model.Token;
@@ -19,6 +20,7 @@ import java.time.temporal.ChronoUnit;
 
 @RestController
 @RequestMapping("/api")
+@Slf4j
 public class GeneralApiController {
   private final UserService userService;
   private final AuthService authService;
