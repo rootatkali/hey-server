@@ -86,24 +86,29 @@ public class AuthService {
   private void validatePassword(String password) {
     ResponseStatusException invalidPassword = new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid password.");
     
-    // 8-32 chars
-    if (password == null || password.length() < 8 || password.length() > 32) throw invalidPassword;
+    // 8-64 chars
+    if (password == null || password.length() < 8 || password.length() > 64) throw invalidPassword;
+    
+    int checks = 0;
+    // a valid password must contain at least 3 of the following 4 tests, in addition to length (compulsory):
     
     // contains upper
-    if (!password.matches(".*[A-Z].*")) throw invalidPassword;
+    if (password.matches(".*[A-Z].*")) checks++;
     
     // contains lower
-    if (!password.matches(".*[a-z].*")) throw invalidPassword;
+    if (password.matches(".*[a-z].*")) checks++;
     
     // contains digit
-    if (!password.matches(".*\\d.*")) throw invalidPassword;
+    if (password.matches(".*\\d.*")) checks++;
     
-    // contains special
-    if (!password.matches(".*[,. !@#$%^&*()_=?/\\[\\]{}].*")) throw invalidPassword;
+    // contains special, which is any of the following:
+    // -,. !@#$%^&*()_+=/[]{}\
+    if (password.matches(".*[-,. !@#$%^&*()_+=?/\\[\\]{}\\\\].*")) checks++;
+    
+    if (checks < 3) throw invalidPassword;
   }
   
   private void validateRegistration(UserRegistration reg) {
-    // todo validate fields
     validateUsername(reg.getUsername());
     validateName(reg.getFirstName());
     validateName(reg.getLastName());
@@ -124,6 +129,14 @@ public class AuthService {
     return new DigestUtils("SHA3-256").digestAsHex(raw);
   }
   
+  // generate token with an expiry date of 2099-12-31T23:59:59
+  private Token generateToken(User u) {
+    Token t = new Token();
+    t.setUser(u);
+    t.setExpires(Timestamp.valueOf(LocalDateTime.of(2099, 12, 31, 23, 59, 59)));
+    return tokenRepo.save(t);
+  }
+  
   public Token registerUser(UserRegistration reg) {
     // validate registration fields
     validateRegistration(reg);
@@ -141,6 +154,7 @@ public class AuthService {
     // create auth entry
     Auth a = new Auth();
     a.setUser(u);
+    
     String salt = generateSalt();
     a.setSalt(salt);
     a.setPassword(hashPassword(reg.getPassword(), salt));
@@ -148,10 +162,7 @@ public class AuthService {
     a = authRepo.save(a);
     
     // create token
-    Token t = new Token();
-    t.setUser(u);
-    t.setExpires(Timestamp.valueOf(LocalDateTime.now().plusMinutes(90)));
-    return tokenRepo.save(t);
+    return generateToken(u);
   }
   
   public Token login(String username, String password) {
@@ -163,15 +174,13 @@ public class AuthService {
     if (!a.getPassword().equals(hash)) throw Error.INVALID_LOGIN.get();
     if (a.getPasswordExpires().toLocalDateTime().isBefore(LocalDateTime.now()))
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Reset your password.");
-  
+    
     // create token
-    Token t = new Token();
-    t.setUser(u);
-    t.setExpires(Timestamp.valueOf(LocalDateTime.now().plusMinutes(90)));
-    return tokenRepo.save(t);
+    return generateToken(u);
   }
   
   public User validateAccessToken(String token) {
+    if (token == null) throw Error.UNAUTHORIZED.get();
     Token t = tokenRepo.findById(token).orElseThrow(Error.UNAUTHORIZED);
     if (t.getExpires().toLocalDateTime().isBefore(LocalDateTime.now()))
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Your token expired, please log in again.");
@@ -181,12 +190,12 @@ public class AuthService {
   public Token resetPassword(String username, String oldPass, String newPass) {
     User u = userRepo.findByUsername(username).orElseThrow(Error.UNAUTHORIZED);
     Auth a = u.getAuth();
-  
+    
     String hash = hashPassword(oldPass, a.getSalt());
     if (!a.getPassword().equals(hash)) throw Error.BAD_REQUEST.get();
     
     validatePassword(newPass);
-  
+    
     String salt = generateSalt();
     a.setSalt(salt);
     a.setPassword(hashPassword(newPass, salt));
@@ -194,13 +203,10 @@ public class AuthService {
     a = authRepo.save(a);
     
     // erase all old tokens
-    tokenRepo.deleteAll(tokenRepo.findAllByUser(u));
-  
+    tokenRepo.deleteAll(tokenRepo.findAllByUser(u)); // assumes at least one token in db, else wouldn't reach here
+    
     // create new token
-    Token t = new Token();
-    t.setUser(u);
-    t.setExpires(Timestamp.valueOf(LocalDateTime.now().plusMinutes(90)));
-    return tokenRepo.save(t);
+    return generateToken(u);
   }
   
   public void logout(String token) {
