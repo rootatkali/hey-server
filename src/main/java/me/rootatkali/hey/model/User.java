@@ -21,8 +21,8 @@ public final class User {
   private String email;
   private String hometown;
   private Date birthdate;
-  private int grade;
-  private char gender;
+  private Integer grade;
+  private Character gender;
   @Lob
   private String bio;
   
@@ -123,7 +123,7 @@ public final class User {
     this.birthdate = birthdate;
   }
   
-  public int getGrade() {
+  public Integer getGrade() {
     return grade;
   }
   
@@ -131,7 +131,7 @@ public final class User {
     this.grade = grade;
   }
   
-  public char getGender() {
+  public Character getGender() {
     return gender;
   }
   
