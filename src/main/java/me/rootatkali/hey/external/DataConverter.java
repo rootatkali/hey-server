@@ -2,14 +2,15 @@ package me.rootatkali.hey.external;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component // for autowiring support
 public class DataConverter {
   private final BiMap<String, Integer> grade;
-  private final BiMap<Integer, String> edarg;
+  private final BiMap<Integer, String> edarg; // inverse of grade
+  
   private final BiMap<String, String> gender;
-  private final BiMap<String, String> redneg;
+  private final BiMap<String, String> redneg; // inverse of gender
   
   public DataConverter() {
     this.grade = HashBiMap.create();
@@ -25,5 +26,15 @@ public class DataConverter {
     
     this.gender = HashBiMap.create();
     this.redneg = gender.inverse();
+    gender.put("ז", "M");
+    gender.put("נ", "F");
+  }
+  
+  public int grade(String grade) {
+    return this.grade.get(grade);
+  }
+  
+  public String grade(int grade) {
+    return edarg.get(grade);
   }
 }
