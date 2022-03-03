@@ -37,4 +37,12 @@ public class DataConverter {
   public String grade(int grade) {
     return edarg.get(grade);
   }
+  
+  public String genderEn(String genderHe) {
+    return gender.get(genderHe);
+  }
+  
+  public String genderHe(String genderEn) {
+    return redneg.get(genderEn);
+  }
 }
