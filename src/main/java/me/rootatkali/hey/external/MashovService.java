@@ -3,6 +3,8 @@ package me.rootatkali.hey.external;
 import com.google.gson.Gson;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
+import lombok.extern.slf4j.Slf4j;
+import me.rootatkali.hey.model.School;
 import me.rootatkali.hey.util.UnimplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -16,13 +18,19 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class MashovService {
   private final RestTemplate restTemplate;
   private final Gson gson;
+  private final DataConverter dataConverter;
+  
   private static final String MASHOV_URL = "https://web.mashov.info/api";
+  private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36";
   
   @Autowired
-  public MashovService(RestTemplateBuilder builder) {
+  public MashovService(RestTemplateBuilder builder,
+                       DataConverter dataConverter) {
+    this.dataConverter = dataConverter;
     this.restTemplate = builder.build();
     this.gson = new Gson();
   }
@@ -31,13 +39,14 @@ public class MashovService {
     Map<String, Object> map = new HashMap<>();
     map.put("apiVersion", "3.20210425");
     map.put("apiBuild", 3.20210425);
+    map.put("appBuild", 3.20210425);
     map.put("appName", "info.mashov.students");
     map.put("appVersion", 3.20210425);
     map.put("deviceManufacturer", "win");
     map.put("deviceModel", "desktop");
     map.put("devicePlatform", "chrome");
     map.put("deviceUuid", "chrome");
-    map.put("deviceVersion", "99.0");
+    map.put("deviceVersion", "99.0.4844.51");
     map.put("IsBiometric", false);
     map.put("username", username);
     map.put("password", password);
@@ -48,19 +57,21 @@ public class MashovService {
   
   /**
    * Connects to Mashov and returns
-   * @param semel The school ID
-   * @param year The login year
+   *
+   * @param semel    The school ID
+   * @param year     The login year
    * @param username The user's login username
    * @param password The user's password
    * @return An {@link ExternalDetails} with details about the user
    */
   public ExternalDetails getMashovDetails(int semel, int year, String username, String password) {
     var map = loginMap(semel, year, username, password);
-  
+    
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
     headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-  
+    headers.set("User-Agent", USER_AGENT);
+    
     HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
     
     ResponseEntity<String> res = restTemplate.postForEntity(MASHOV_URL + "/login", entity, String.class);
@@ -69,14 +80,14 @@ public class MashovService {
     
     ReadContext ctx = JsonPath.parse(res.getBody());
     
-    var ret = new ExternalDetails(
+    String displayName = ctx.read("$.credential.displayName");
+    
+    return new ExternalDetails(
         ctx.read("$.credential.userId"),
         ctx.read("$.credential.idNumber", String.class),
-        -1,
-        null,
-        null
-    ); // todo finish
-    
-    throw new UnimplementedException();
+        dataConverter.grade(ctx.read("$.accessToken.children[0].classCode")),
+        dataConverter.genderEn(ctx.read("$.accessToken.gender")),
+        displayName.substring(0, displayName.lastIndexOf(' '))
+    );
   }
 }
