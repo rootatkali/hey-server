@@ -1,6 +1,7 @@
 package me.rootatkali.hey.external;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +57,28 @@ public class MashovService {
     return map;
   }
   
+  public List<School> getSchools() {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+    headers.set(HttpHeaders.USER_AGENT, USER_AGENT);
+    
+    HttpEntity<Void> entity = new HttpEntity<>(headers);
+    
+    ResponseEntity<String> response = restTemplate.exchange(MASHOV_URL + "/schools", HttpMethod.GET, entity, String.class);
+    
+    TypeToken<List<Map<String, Object>>> typeToken = new TypeToken<>() {
+    };
+    
+    List<Map<String, Object>> map = gson.fromJson(response.getBody(), typeToken.getType());
+    
+    List<School> ret = new ArrayList<>();
+    
+    if (map != null)
+      map.forEach(m -> ret.add(new School(((Double) m.get("semel")).intValue(), (String) m.get("name"), null)));
+    
+    return ret;
+  }
+  
   /**
    * Connects to Mashov and returns
    *
@@ -70,7 +94,7 @@ public class MashovService {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
     headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-    headers.set("User-Agent", USER_AGENT);
+    headers.set(HttpHeaders.USER_AGENT, USER_AGENT);
     
     HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
     
