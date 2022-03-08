@@ -88,6 +88,11 @@ public class AuthService {
     u.setLastName(reg.getLastName());
     u.setEmail(reg.getEmail());
     u.setPhoneNum(reg.getPhoneNum());
+    
+    // TODO validation
+    u.setGender('X');
+    u.setGrade(0);
+    
     u = userRepo.save(u);
     
     // create auth entry
