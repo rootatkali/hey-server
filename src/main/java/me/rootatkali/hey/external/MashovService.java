@@ -88,7 +88,7 @@ public class MashovService {
    * @param password The user's password
    * @return An {@link ExternalDetails} with details about the user
    */
-  public ExternalDetails getMashovDetails(int semel, int year, String username, String password) {
+  public ExternalDetails fetchDetails(int semel, int year, String username, String password) {
     var map = loginMap(semel, year, username, password);
     
     HttpHeaders headers = new HttpHeaders();

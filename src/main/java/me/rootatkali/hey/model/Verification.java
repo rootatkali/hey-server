@@ -24,6 +24,18 @@ public class Verification {
   @JsonIgnore
   private User user;
   
+  public Verification(Type type, String field, String data, Timestamp timestamp, User user) {
+    this.type = type;
+    this.field = field;
+    this.data = data;
+    this.timestamp = timestamp;
+    this.user = user;
+  }
+  
+  Verification() {
+  
+  }
+  
   public String getId() {
     return id;
   }
