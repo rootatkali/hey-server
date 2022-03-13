@@ -2,10 +2,8 @@ package me.rootatkali.hey.rest;
 
 import lombok.extern.slf4j.Slf4j;
 import me.rootatkali.hey.HeyApplication;
-import me.rootatkali.hey.model.Login;
-import me.rootatkali.hey.model.Token;
-import me.rootatkali.hey.model.User;
-import me.rootatkali.hey.model.UserRegistration;
+import me.rootatkali.hey.external.VerificationService;
+import me.rootatkali.hey.model.*;
 import me.rootatkali.hey.service.AuthService;
 import me.rootatkali.hey.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,11 +23,15 @@ import java.time.temporal.ChronoUnit;
 public class GeneralApiController {
   private final UserService userService;
   private final AuthService authService;
+  private final VerificationService verificationService;
   
   @Autowired
-  public GeneralApiController(UserService userService, AuthService authService) {
+  public GeneralApiController(UserService userService,
+                              AuthService authService,
+                              VerificationService verificationService) {
     this.userService = userService;
     this.authService = authService;
+    this.verificationService = verificationService;
   }
   
   private User tokenAndUser(HttpServletResponse res, Token t) {
@@ -75,11 +77,24 @@ public class GeneralApiController {
     return authService.validateAccessToken(token);
   }
   
-  @PatchMapping("/me")
+  @PatchMapping(path = "/me", consumes = "application/json")
   public User editMe(@CookieValue(name = "token", required = false) String token, @RequestBody User edit) {
     User u = getMe(token);
     
     return userService.editUser(u, edit);
+  }
+  
+  @PostMapping(path = "/verify/mashov", consumes = "application/json")
+  public User verifyMashov(@CookieValue(name = "token", required = false) String token, @RequestBody MashovLogin login) {
+    User u = getMe(token);
+    
+    return verificationService.verifyMashov(
+        u,
+        login.semel(),
+        login.year(),
+        login.username(),
+        login.password()
+    );
   }
   
   @PostMapping("/users/{user}/changePassword")
