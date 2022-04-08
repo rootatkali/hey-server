@@ -5,6 +5,7 @@ import me.rootatkali.hey.HeyApplication;
 import me.rootatkali.hey.external.VerificationService;
 import me.rootatkali.hey.model.*;
 import me.rootatkali.hey.service.AuthService;
+import me.rootatkali.hey.service.SchoolService;
 import me.rootatkali.hey.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,16 +22,19 @@ import java.time.temporal.ChronoUnit;
 @RequestMapping("/api")
 @Slf4j
 public class GeneralApiController {
-  private final UserService userService;
   private final AuthService authService;
+  private final SchoolService schoolService;
+  private final UserService userService;
   private final VerificationService verificationService;
   
   @Autowired
   public GeneralApiController(UserService userService,
                               AuthService authService,
+                              SchoolService schoolService,
                               VerificationService verificationService) {
     this.userService = userService;
     this.authService = authService;
+    this.schoolService = schoolService;
     this.verificationService = verificationService;
   }
   
@@ -82,6 +86,13 @@ public class GeneralApiController {
     User u = getMe(token);
     
     return userService.editUser(u, edit);
+  }
+  
+  @GetMapping("/schools")
+  public Iterable<School> getSchools(@CookieValue(name = "token", required = false) String token) {
+    authService.validateAccessToken(token); // not dependent on user - no need for getMe
+    
+    return schoolService.getSchools();
   }
   
   @GetMapping("/verify")

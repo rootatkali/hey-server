@@ -6,7 +6,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 import lombok.extern.slf4j.Slf4j;
 import me.rootatkali.hey.model.School;
-import me.rootatkali.hey.util.UnimplementedException;
+import me.rootatkali.hey.repo.SchoolRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
@@ -25,16 +25,21 @@ public class MashovService {
   private final RestTemplate restTemplate;
   private final Gson gson;
   private final DataConverter dataConverter;
+  private final SchoolRepository schoolRepo;
   
   private static final String MASHOV_URL = "https://web.mashov.info/api";
   private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36";
   
   @Autowired
   public MashovService(RestTemplateBuilder builder,
-                       DataConverter dataConverter) {
+                       DataConverter dataConverter,
+                       SchoolRepository schoolRepo) {
     this.dataConverter = dataConverter;
     this.restTemplate = builder.build();
+    this.schoolRepo = schoolRepo;
     this.gson = new Gson();
+    
+    schoolRepo.saveAll(fetchSchools());
   }
   
   private Map<String, Object> loginMap(int semel, int year, String username, String password) {
@@ -57,7 +62,7 @@ public class MashovService {
     return map;
   }
   
-  public List<School> getSchools() {
+  public List<School> fetchSchools() {
     HttpHeaders headers = new HttpHeaders();
     headers.setAccept(List.of(MediaType.APPLICATION_JSON));
     headers.set(HttpHeaders.USER_AGENT, USER_AGENT);
@@ -66,8 +71,7 @@ public class MashovService {
     
     ResponseEntity<String> response = restTemplate.exchange(MASHOV_URL + "/schools", HttpMethod.GET, entity, String.class);
     
-    TypeToken<List<Map<String, Object>>> typeToken = new TypeToken<>() {
-    };
+    TypeToken<List<Map<String, Object>>> typeToken = new TypeToken<>() {};
     
     List<Map<String, Object>> map = gson.fromJson(response.getBody(), typeToken.getType());
     
