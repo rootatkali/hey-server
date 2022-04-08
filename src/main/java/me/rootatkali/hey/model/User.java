@@ -45,6 +45,10 @@ public final class User {
   @JsonIgnore
   private List<Token> tokens;
   
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  @JsonIgnore
+  private List<Verification> verifications;
+  
   @ManyToMany
   @JoinTable(
       name = "user_interest",
@@ -177,5 +181,9 @@ public final class User {
   
   public List<Token> getTokens() {
     return tokens;
+  }
+  
+  public List<Verification> getVerifications() {
+    return verifications;
   }
 }
