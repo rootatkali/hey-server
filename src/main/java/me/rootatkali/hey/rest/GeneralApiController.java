@@ -84,6 +84,13 @@ public class GeneralApiController {
     return userService.editUser(u, edit);
   }
   
+  @GetMapping("/verify")
+  public boolean isVerified(@CookieValue(name = "token", required = false) String token) {
+    User u = getMe(token);
+    
+    return verificationService.isVerified(u);
+  }
+  
   @PostMapping(path = "/verify/mashov", consumes = "application/json")
   public User verifyMashov(@CookieValue(name = "token", required = false) String token, @RequestBody MashovLogin login) {
     User u = getMe(token);
