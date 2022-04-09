@@ -31,6 +31,11 @@ public class VerificationService {
     this.mashovService = mashovService;
   }
   
+  public boolean isVerified(User user) {
+    // TODO set up a more robust algorithm
+    return verificationRepo.existsByUser(user);
+  }
+  
   public User verifyMashov(User user, int semel, int year, String username, String password) {
     var details = mashovService.fetchDetails(semel, year, username, password);
     

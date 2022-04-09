@@ -80,12 +80,12 @@ public class UserService {
       db.setHometown(edit.getHometown());
     }
     
-    if (edit.getGrade() != null) {
+    if (edit.getGrade() != null && edit.getGrade() != 0) {
       validator.validateGrade(edit.getGrade());
       db.setGrade(edit.getGrade());
     }
     
-    if (edit.getGender() != null) {
+    if (edit.getGender() != null && edit.getGender() != '\u0000') {
       validator.validateGender(edit.getGender());
       db.setGender(edit.getGender());
     }
