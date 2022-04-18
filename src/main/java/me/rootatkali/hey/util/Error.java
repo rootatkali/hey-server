@@ -2,6 +2,7 @@ package me.rootatkali.hey.util;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.server.ServerErrorException;
 
 import java.util.function.Supplier;
 
@@ -27,4 +28,8 @@ public class Error {
   
   public static final Supplier<ResponseStatusException> ALREADY_EXISTS
       = () -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Resource already exists.");
+  
+  // 500 Internal Server Error
+  public static final Supplier<ResponseStatusException> SERVER_ERROR
+      = () -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
 }

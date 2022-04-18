@@ -1,11 +1,9 @@
 package me.rootatkali.hey.service;
 
-import me.rootatkali.hey.model.Auth;
-import me.rootatkali.hey.model.Token;
-import me.rootatkali.hey.model.User;
-import me.rootatkali.hey.model.UserRegistration;
+import me.rootatkali.hey.model.*;
 import me.rootatkali.hey.repo.AuthRepository;
 import me.rootatkali.hey.repo.TokenRepository;
+import me.rootatkali.hey.repo.UserPreferencesRepository;
 import me.rootatkali.hey.repo.UserRepository;
 import me.rootatkali.hey.util.Error;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -22,6 +20,7 @@ import java.time.LocalDateTime;
 public class AuthService {
   private final AuthRepository authRepo;
   private final UserRepository userRepo;
+  private final UserPreferencesRepository prefsRepo;
   private final TokenRepository tokenRepo;
   private final Validator validator;
   private final SecureRandom random; // for salt generation purposes
@@ -36,10 +35,12 @@ public class AuthService {
   @Autowired
   public AuthService(AuthRepository authRepo,
                      UserRepository userRepo,
+                     UserPreferencesRepository prefsRepo,
                      TokenRepository tokenRepo,
                      Validator validator) {
     this.authRepo = authRepo;
     this.userRepo = userRepo;
+    this.prefsRepo = prefsRepo;
     this.tokenRepo = tokenRepo;
     this.validator = validator;
     this.random = new SecureRandom();
@@ -104,6 +105,10 @@ public class AuthService {
     a.setPassword(hashPassword(reg.getPassword(), salt));
     a.setPasswordExpires(Timestamp.valueOf(LocalDateTime.now().plusDays(90)));
     a = authRepo.save(a);
+  
+    UserPreferences up = new UserPreferences();
+    up.setUser(u);
+    up = prefsRepo.save(up);
     
     // create token
     return generateToken(u);

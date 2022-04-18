@@ -1,11 +1,13 @@
 package me.rootatkali.hey.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import me.rootatkali.hey.util.UnimplementedException;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.sql.Date;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 public final class User {
@@ -35,6 +37,11 @@ public final class User {
   @PrimaryKeyJoinColumn
   @JsonIgnore
   private UserPreferences prefs;
+  
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+  @PrimaryKeyJoinColumn
+  @JsonIgnore
+  private Location location;
   
   @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
   @PrimaryKeyJoinColumn
@@ -185,5 +192,22 @@ public final class User {
   
   public List<Verification> getVerifications() {
     return verifications;
+  }
+  
+  public Location getLocation() {
+    return location;
+  }
+  
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    User user = (User) o;
+    return Objects.equals(id, user.id);
+  }
+  
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
   }
 }
