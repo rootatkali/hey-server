@@ -1,10 +1,12 @@
 package me.rootatkali.hey.external;
 
+import me.rootatkali.hey.model.School;
 import me.rootatkali.hey.model.User;
 import me.rootatkali.hey.model.Verification;
 import me.rootatkali.hey.repo.SchoolRepository;
 import me.rootatkali.hey.repo.UserRepository;
 import me.rootatkali.hey.repo.VerificationRepository;
+import me.rootatkali.hey.util.Error;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -59,7 +61,8 @@ public class VerificationService {
     
     // TODO more verifications?
     
-    // TODO school
+    School s = schoolRepo.findById(semel).orElseThrow(Error.SERVER_ERROR);
+    user.setSchool(s);
     
     verificationRepo.saveAll(List.of(gender, grade));
     return userRepo.save(user);

@@ -5,6 +5,7 @@ import me.rootatkali.hey.HeyApplication;
 import me.rootatkali.hey.external.VerificationService;
 import me.rootatkali.hey.model.*;
 import me.rootatkali.hey.service.AuthService;
+import me.rootatkali.hey.service.FriendService;
 import me.rootatkali.hey.service.SchoolService;
 import me.rootatkali.hey.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -26,16 +28,19 @@ public class GeneralApiController {
   private final SchoolService schoolService;
   private final UserService userService;
   private final VerificationService verificationService;
+  private final FriendService friendService;
   
   @Autowired
   public GeneralApiController(UserService userService,
                               AuthService authService,
                               SchoolService schoolService,
-                              VerificationService verificationService) {
+                              VerificationService verificationService,
+                              FriendService friendService) {
     this.userService = userService;
     this.authService = authService;
     this.schoolService = schoolService;
     this.verificationService = verificationService;
+    this.friendService = friendService;
   }
   
   private User tokenAndUser(HttpServletResponse res, Token t) {
@@ -88,6 +93,21 @@ public class GeneralApiController {
     return userService.editUser(u, edit);
   }
   
+  @GetMapping("/me/location")
+  public Location getLocation(@CookieValue(name = "token", required = false) String token) {
+    User u = getMe(token);
+    
+    return userService.getLocation(u);
+  }
+  
+  @PostMapping(path = "/me/location", consumes = "application/json")
+  public LatLon setLocation(@CookieValue(name = "token", required = false) String token,
+                              @RequestBody LatLon location) {
+    User u = getMe(token);
+    
+    return userService.setLocation(u, new Location(location.lat(), location.lon()));
+  }
+  
   @GetMapping("/schools")
   public Iterable<School> getSchools(@CookieValue(name = "token", required = false) String token) {
     authService.validateAccessToken(token); // not dependent on user - no need for getMe
@@ -124,6 +144,13 @@ public class GeneralApiController {
   
     // set cookie
     return tokenAndUser(res, t);
+  }
+  
+  @GetMapping("/interests")
+  public List<Interest> getInterests(@CookieValue(name = "token", required = false) String token) {
+    authService.validateAccessToken(token);
+    
+    return friendService.getAllInterests();
   }
   
   @PostMapping("/logout")

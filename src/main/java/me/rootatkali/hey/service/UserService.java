@@ -1,7 +1,10 @@
 package me.rootatkali.hey.service;
 
+import me.rootatkali.hey.model.LatLon;
+import me.rootatkali.hey.model.Location;
 import me.rootatkali.hey.model.User;
 import me.rootatkali.hey.model.UserPreferences;
+import me.rootatkali.hey.repo.LocationRepository;
 import me.rootatkali.hey.repo.UserPreferencesRepository;
 import me.rootatkali.hey.repo.UserRepository;
 import me.rootatkali.hey.util.Xss;
@@ -12,14 +15,17 @@ import org.springframework.stereotype.Service;
 public class UserService {
   private final UserRepository userRepo;
   private final UserPreferencesRepository userPrefsRepo;
+  private final LocationRepository locationRepo;
   private final Validator validator;
   
   @Autowired
   public UserService(UserRepository userRepo,
                      UserPreferencesRepository userPrefsRepo,
+                     LocationRepository locationRepo,
                      Validator validator) {
     this.userRepo = userRepo;
     this.userPrefsRepo = userPrefsRepo;
+    this.locationRepo = locationRepo;
     this.validator = validator;
   }
   
@@ -96,5 +102,16 @@ public class UserService {
     }
     
     return userRepo.save(db);
+  }
+  
+  public LatLon setLocation(User user, Location location) {
+    if (locationRepo.existsById(user.getId())) locationRepo.deleteById(user.getId());
+    location.setUser(user);
+    locationRepo.save(location);
+    return new LatLon(location.lat(), location.lon());
+  }
+  
+  public Location getLocation(User user) {
+    return user.getLocation();
   }
 }

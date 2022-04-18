@@ -69,11 +69,11 @@ public class School implements Comparable<School> {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     School school = (School) o;
-    return id == school.id && Objects.equals(name, school.name) && Objects.equals(town, school.town) && Objects.equals(users, school.users);
+    return id == school.id;
   }
   
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, town, users);
+    return id;
   }
 }
