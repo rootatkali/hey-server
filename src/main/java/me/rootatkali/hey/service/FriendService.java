@@ -2,10 +2,7 @@ package me.rootatkali.hey.service;
 
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
-import me.rootatkali.hey.model.Friendship;
-import me.rootatkali.hey.model.Interest;
-import me.rootatkali.hey.model.Location;
-import me.rootatkali.hey.model.User;
+import me.rootatkali.hey.model.*;
 import me.rootatkali.hey.repo.FriendshipRepository;
 import me.rootatkali.hey.repo.InterestRepository;
 import me.rootatkali.hey.repo.UserPreferencesRepository;
@@ -24,6 +21,7 @@ public class FriendService {
   private final InterestRepository interestRepo;
   private final FriendshipRepository friendRepo;
   private final UserPreferencesRepository userPrefsRepo; // TODO take prefs into account
+  private final UserService userService;
   
   /** An approximate value for the earth's radius, in km */
   private static final double R_E = 6.3781E3;
@@ -32,11 +30,13 @@ public class FriendService {
   public FriendService(UserRepository userRepo,
                        InterestRepository interestRepo,
                        FriendshipRepository friendRepo,
-                       UserPreferencesRepository userPrefsRepo) {
+                       UserPreferencesRepository userPrefsRepo,
+                       UserService userService) {
     this.userRepo = userRepo;
     this.interestRepo = interestRepo;
     this.friendRepo = friendRepo;
     this.userPrefsRepo = userPrefsRepo;
+    this.userService = userService;
   }
   
   public List<Interest> getAllInterests() {
@@ -51,18 +51,18 @@ public class FriendService {
     return interestRepo.save(i);
   }
   
-  public List<Interest> setInterests(User user, List<Interest> interests, List<String> newInterests) {
+  public List<Interest> setUserInterests(User user, List<Interest> interests, List<String> newInterests) {
     // register new interests and merge lists
     List<Interest> added = newInterests != null ? newInterests.stream().map(this::addInterest).toList() : List.of();
     interests.addAll(added);
     
     user.setInterests(interests);
-    userRepo.save(user);
-    return interests;
+    user = userRepo.save(user);
+    return user.getInterests();
   }
   
-  public List<Interest> setInterests(User user, List<Interest> interests) {
-    return setInterests(user, interests, null);
+  public List<Interest> setUserInterests(User user, List<Interest> interests) {
+    return setUserInterests(user, interests, null);
   }
   
   /** Returns the constant c² for normal curve calculations, based on the requested value at a specific point x. */
@@ -154,10 +154,44 @@ public class FriendService {
     return gradeScoreElement + locationScoreElement + schoolScoreElement + interestScoreElement;
   }
   
-  public List<User> matchAllUsers(User u) {
+  private FriendView userToFriendView(User friend, User requester, double score) {
+    var status = friendRepo.findByTwoUsers(friend, requester).map(Friendship::getStatus).orElse(null);
+    boolean initiator = friendRepo.findByTwoUsers(friend, requester)
+        .map(f -> f.getInvitor().equals(friend)).orElse(false);
+        
+    Location fLoc = friend.getLocation(), rLoc = requester.getLocation();
+    double distance;
+    if (fLoc == null || rLoc == null) distance = -1;
+    else distance = d(fLoc.lat(), fLoc.lon(), rLoc.lat(), rLoc.lon());
+    
+    return new FriendView(
+        friend.getId(),
+        friend.getUsername(),
+        friend.getFirstName(),
+        friend.getLastName(),
+        status,
+        initiator,
+        friend.getBio(),
+        friend.getSchool(),
+        friend.getInterests(),
+        friend.getHometown(),
+        distance,
+        friend.getGrade(),
+        friend.getGender(),
+        score
+    );
+  }
+  
+  public FriendView getFriendView(User user, String friend) {
+    User fUser = userService.getUser(friend);
+    return userToFriendView(fUser, user, match(user, fUser));
+  }
+  
+  public List<FriendView> matchAllUsers(User u) {
     List<User> allUsers = Lists.newArrayList(userRepo.findAll());
     allUsers.remove(u);
     
+    // cache for the match operation
     Map<User, Double> matchValues = new HashMap<>();
     allUsers.forEach(usr -> matchValues.put(usr, match(u, usr)));
     
@@ -165,7 +199,9 @@ public class FriendService {
         Collections.reverseOrder((a, b) -> Doubles.compare(matchValues.get(a), matchValues.get(b)))
     );
     
-    return allUsers; // TODO Implement Friend view
+    return allUsers.stream().map(
+        usr -> userToFriendView(usr, u, matchValues.get(usr))
+    ).toList();
   }
   
   public Iterable<Friendship> getFriendData(User u) {

@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -55,13 +56,13 @@ public class GeneralApiController {
   
   @GetMapping("/users")
   public Iterable<User> getUsers() {
-    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR); // todo permissions
+    throw new ResponseStatusException(HttpStatus.FORBIDDEN); // todo permissions
     // return userService.getUsers();
   }
   
   @GetMapping("/users/{id}")
   public User getUser(@PathVariable String id) {
-    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR); // todo permissions
+    throw new ResponseStatusException(HttpStatus.FORBIDDEN); // todo permissions
     // return userService.getUser(id);
   }
   
@@ -123,7 +124,8 @@ public class GeneralApiController {
   }
   
   @PostMapping(path = "/verify/mashov", consumes = "application/json")
-  public User verifyMashov(@CookieValue(name = "token", required = false) String token, @RequestBody MashovLogin login) {
+  public User verifyMashov(@CookieValue(name = "token", required = false) String token,
+                           @RequestBody MashovLogin login) {
     User u = getMe(token);
     
     return verificationService.verifyMashov(
@@ -133,6 +135,15 @@ public class GeneralApiController {
         login.username(),
         login.password()
     );
+  }
+  
+  @Deprecated(forRemoval = true)
+  @PostMapping(path = "/verify/debug/school", consumes = "application/json")
+  public User manuallySetSchool(@CookieValue(name = "token", required = false) String token,
+                                @RequestBody School school) {
+    User u = getMe(token);
+  
+    return userService.setSchool(u, school);
   }
   
   @PostMapping("/users/{user}/changePassword")
@@ -153,8 +164,39 @@ public class GeneralApiController {
     return friendService.getAllInterests();
   }
   
+  @PostMapping("/interests")
+  public Interest addInterest(@CookieValue(name = "token", required = false) String token,
+                              @RequestBody String name) {
+    authService.validateAccessToken(token);
+    
+    return friendService.addInterest(name);
+  }
+  
+  @GetMapping("/me/interests")
+  public List<Interest> getMyInterests(@CookieValue(name = "token", required = false) String token) {
+    User u = getMe(token);
+    
+    return Optional.ofNullable(u.getInterests()).orElse(List.of());
+  }
+  
+  @PutMapping("/me/interests")
+  public List<Interest> setMyInterests(@CookieValue(name = "token", required = false) String token,
+                                       @RequestBody List<Interest> interests) {
+    User u = getMe(token);
+    
+    return friendService.setUserInterests(u, interests);
+  }
+  
+  @GetMapping("/match")
+  public List<FriendView> getMatches(@CookieValue(name = "token", required = false) String token) {
+    User u = getMe(token);
+    
+    return friendService.matchAllUsers(u);
+  }
+  
   @PostMapping("/logout")
-  public ResponseEntity<Void> logout(@CookieValue(name = "token", required = false) String token, HttpServletResponse res) {
+  public ResponseEntity<Void> logout(@CookieValue(name = "token", required = false) String token,
+                                     HttpServletResponse res) {
     authService.validateAccessToken(token);
     authService.logout(token);
     

@@ -29,7 +29,14 @@ public class Error {
   public static final Supplier<ResponseStatusException> ALREADY_EXISTS
       = () -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Resource already exists.");
   
+  // 404 Not Found
+  public static final Supplier<ResponseStatusException> NOT_FOUND
+      = () -> new ResponseStatusException(HttpStatus.NOT_FOUND);
+  
   // 500 Internal Server Error
   public static final Supplier<ResponseStatusException> SERVER_ERROR
       = () -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+  
+  public static final Supplier<ResponseStatusException> UNIMPLEMENTED
+      = () -> new ServerErrorException("Method unimplemented", new UnimplementedException());
 }

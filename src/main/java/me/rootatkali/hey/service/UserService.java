@@ -1,12 +1,10 @@
 package me.rootatkali.hey.service;
 
-import me.rootatkali.hey.model.LatLon;
-import me.rootatkali.hey.model.Location;
-import me.rootatkali.hey.model.User;
-import me.rootatkali.hey.model.UserPreferences;
+import me.rootatkali.hey.model.*;
 import me.rootatkali.hey.repo.LocationRepository;
 import me.rootatkali.hey.repo.UserPreferencesRepository;
 import me.rootatkali.hey.repo.UserRepository;
+import me.rootatkali.hey.util.Error;
 import me.rootatkali.hey.util.Xss;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,7 +32,7 @@ public class UserService {
   }
   
   public User getUser(String id) {
-    return userRepo.findById(id).orElse(null);
+    return userRepo.findById(id).orElseThrow(Error.NOT_FOUND);
   }
   
   public Iterable<UserPreferences> getAllUserPrefs() {
@@ -102,6 +100,17 @@ public class UserService {
     }
     
     return userRepo.save(db);
+  }
+  
+  /**
+   * For use in debug only
+   *
+   * @deprecated To remove before production
+   */
+  @Deprecated(forRemoval = true)
+  public User setSchool(User user, School school) {
+    user.setSchool(school);
+    return userRepo.save(user);
   }
   
   public LatLon setLocation(User user, Location location) {
