@@ -41,6 +41,14 @@ public abstract class Message<T> {
     this.id = id;
   }
   
+  public String getChat() {
+    return chat;
+  }
+  
+  public void setChat(String chat) {
+    this.chat = chat;
+  }
+  
   public MessageType getType() {
     return type;
   }
