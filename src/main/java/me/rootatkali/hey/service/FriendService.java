@@ -155,7 +155,11 @@ public class FriendService {
   }
   
   private FriendView userToFriendView(User friend, User requester, double score) {
-    var status = friendRepo.findByTwoUsers(friend, requester).map(Friendship::getStatus).orElse(null);
+    var status = friendRepo
+        .findByTwoUsers(friend, requester)
+        .map(Friendship::getStatus)
+        .orElse(Friendship.Status.STRANGER);
+    
     boolean initiator = friendRepo.findByTwoUsers(friend, requester)
         .map(f -> f.getInvitor().equals(friend)).orElse(false);
         

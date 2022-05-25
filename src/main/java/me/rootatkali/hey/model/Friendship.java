@@ -51,6 +51,6 @@ public class Friendship {
   }
   
   public enum Status {
-    PENDING, FRIEND, REJECTED
+    PENDING, FRIEND, REJECTED, STRANGER
   }
 }
