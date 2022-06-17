@@ -32,7 +32,7 @@ public class Verification {
     this.user = user;
   }
   
-  Verification() {
+  protected Verification() {
   
   }
   

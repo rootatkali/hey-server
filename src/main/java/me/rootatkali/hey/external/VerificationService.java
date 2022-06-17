@@ -13,14 +13,16 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class VerificationService {
   private final VerificationRepository verificationRepo;
   private final UserRepository userRepo;
   private final SchoolRepository schoolRepo;
-  private final MashovService mashovService;
+  private final Map<Verification.Type, ExternalService> services;
   
   @Autowired
   public VerificationService(VerificationRepository verificationRepo,
@@ -30,7 +32,9 @@ public class VerificationService {
     this.verificationRepo = verificationRepo;
     this.userRepo = userRepo;
     this.schoolRepo = schoolRepo;
-    this.mashovService = mashovService;
+    
+    services = new HashMap<>();
+    services.put(Verification.Type.MASHOV, mashovService);
   }
   
   public boolean isVerified(User user) {
@@ -38,8 +42,10 @@ public class VerificationService {
     return verificationRepo.existsByUser(user);
   }
   
-  public User verifyMashov(User user, int semel, int year, String username, String password) {
-    var details = mashovService.fetchDetails(semel, year, username, password);
+  public User verify(Verification.Type type, User user, int semel, int year, String username, String password) {
+    ExternalService service = services.get(type); // Get details by
+    
+    ExternalDetails details = service.fetchDetails(semel, year, username, password);
     
     Verification gender = new Verification(
         Verification.Type.MASHOV,
@@ -49,7 +55,7 @@ public class VerificationService {
         user
     );
     user.setGender(details.gender().charAt(0));
-    
+  
     Verification grade = new Verification(
         Verification.Type.MASHOV,
         "grade",
@@ -58,12 +64,12 @@ public class VerificationService {
         user
     );
     user.setGrade(details.grade());
-    
+  
     // TODO more verifications?
-    
+  
     School s = schoolRepo.findById(semel).orElseThrow(Error.SERVER_ERROR);
     user.setSchool(s);
-    
+  
     verificationRepo.saveAll(List.of(gender, grade));
     return userRepo.save(user);
   }

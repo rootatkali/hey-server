@@ -1,35 +1,36 @@
 package me.rootatkali.hey.chat;
 
-import me.rootatkali.hey.db.ObjectLobConverter;
-
-import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Lob;
+import java.sql.Timestamp;
 
 @Entity
-public abstract class Message<T> {
+public class Message implements Comparable<Message> {
   @Id
-  protected String id;
-  protected String chat;
-  protected MessageType type;
-  protected MessageStatus status;
-  @Convert(converter = ObjectLobConverter.class)
-  protected T body;
-  // TODO Timestamp
-  private String from; // User?
-  private String to; // User?
+  private String id;
+  private String chat;
+  private MessageType type;
+  private MessageStatus status;
+  @Lob
+  private byte[] body;
+  private String sender; // User?
+  private String recipient; // User?
+  private Timestamp sent;
+  private Timestamp delivered;
+  private Timestamp seen;
   
   protected Message() {
   
   }
   
-  protected Message(MessageType type, String chat, String from, String to, T body) {
+  public Message(MessageType type, String chat, String sender, String recipient, byte[] body) {
     // gen id
     // set timestamp
     this.type = type;
     this.chat = chat;
-    this.from = from;
-    this.to = to;
+    this.sender = sender;
+    this.recipient = recipient;
     this.body = body;
   }
   
@@ -65,27 +66,56 @@ public abstract class Message<T> {
     this.status = status;
   }
   
-  public T getBody() {
+  public byte[] getBody() {
     return body;
   }
   
-  public void setBody(T body) {
+  public void setBody(byte[] body) {
     this.body = body;
   }
   
-  public String getFrom() {
-    return from;
+  public String getSender() {
+    return sender;
   }
   
-  public void setFrom(String from) {
-    this.from = from;
+  public void setSender(String from) {
+    this.sender = from;
   }
   
-  public String getTo() {
-    return to;
+  public String getRecipient() {
+    return recipient;
   }
   
-  public void setTo(String to) {
-    this.to = to;
+  public void setRecipient(String to) {
+    this.recipient = to;
+  }
+  
+  public Timestamp getSent() {
+    return sent;
+  }
+  
+  public void setSent(Timestamp sent) {
+    this.sent = sent;
+  }
+  
+  public Timestamp getDelivered() {
+    return delivered;
+  }
+  
+  public void setDelivered(Timestamp delivered) {
+    this.delivered = delivered;
+  }
+  
+  public Timestamp getSeen() {
+    return seen;
+  }
+  
+  public void setSeen(Timestamp read) {
+    this.seen = read;
+  }
+  
+  @Override
+  public int compareTo(Message o) {
+    return sent.compareTo(o.sent);
   }
 }

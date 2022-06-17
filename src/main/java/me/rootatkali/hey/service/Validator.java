@@ -37,7 +37,7 @@ public class Validator {
   public void validateName(String name) {
     var invalidName = new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid name: " + name + ".");
     
-    final String approvedSpecialChars = " '-";
+    final String approvedSpecialChars = " '-\"";
     // check for empty name
     if (Strings.isNullOrEmpty(name)) throw invalidName;
     // trim and check for printability

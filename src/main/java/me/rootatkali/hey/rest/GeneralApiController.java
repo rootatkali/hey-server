@@ -128,7 +128,8 @@ public class GeneralApiController {
                            @RequestBody MashovLogin login) {
     User u = getMe(token);
     
-    return verificationService.verifyMashov(
+    return verificationService.verify(
+        Verification.Type.MASHOV,
         u,
         login.semel(),
         login.year(),
@@ -192,6 +193,43 @@ public class GeneralApiController {
     User u = getMe(token);
     
     return friendService.matchAllUsers(u);
+  }
+  
+  @GetMapping("/friends")
+  public List<FriendView> getFriends(@CookieValue(name = "token", required = false) String token) {
+    User u = getMe(token);
+    
+    return friendService.getFriends(u);
+  }
+  
+  @GetMapping("/friends/pending")
+  public List<FriendView> getPendingFriendRequests(@CookieValue(name = "token", required = false) String token) {
+    User u = getMe(token);
+    
+    return friendService.getPendingRequests(u);
+  }
+  
+  private FriendView status(String token, String user, Friendship.Status status) {
+    User u = getMe(token);
+  
+    User friend = getUser(user);
+  
+    return friendService.updateStatus(u, friend, status);
+  }
+  
+  @PostMapping("/friends/{user}")
+  public FriendView requestFriend(@CookieValue(name = "token", required = false) String token, @PathVariable String user) {
+    return status(token, user, Friendship.Status.PENDING);
+  }
+  
+  @PutMapping("/friends/{user}/approve")
+  public FriendView approveFriend(@CookieValue(name = "token", required = false) String token, @PathVariable String user) {
+    return status(token, user, Friendship.Status.FRIEND);
+  }
+  
+  @PutMapping("/friends/{user}/reject")
+  public FriendView rejectFriend(@CookieValue(name = "token", required = false) String token, @PathVariable String user) {
+    return status(token, user, Friendship.Status.REJECTED);
   }
   
   @PostMapping("/logout")

@@ -40,4 +40,8 @@ public class Chat {
   public String getUser2() {
     return user2;
   }
+  
+  public boolean containsUser(String id) {
+    return id.equals(user1) || id.equals(user2);
+  }
 }

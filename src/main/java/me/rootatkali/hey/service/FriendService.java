@@ -211,4 +211,43 @@ public class FriendService {
   public Iterable<Friendship> getFriendData(User u) {
     return friendRepo.getFriendshipByUser(u);
   }
+  
+  public FriendView updateStatus(User user, User friend, Friendship.Status status) {
+    Friendship entry = friendRepo.findByTwoUsers(user, friend).orElseGet(() -> {
+        Friendship f = new Friendship();
+        f.setInvitor(user);
+        f.setInvitee(friend);
+        return f;
+    });
+    
+    entry.setStatus(status);
+    
+    friendRepo.save(entry);
+    
+    return getFriendView(user, friend.getId());
+  }
+  
+  public List<FriendView> getPendingRequests(User user) {
+    List<FriendView> list = new ArrayList<>();
+    
+    for (Friendship f : friendRepo.getPendingRequestsByUserAndStatus(user, Friendship.Status.PENDING)) {
+      list.add(getFriendView(user, f.getInvitor().getId()));
+    }
+    
+    return list;
+  }
+  
+  private User getCompanion(Friendship f, User u) {
+    return f.getInvitor().equals(u) ? f.getInvitee() : f.getInvitor();
+  }
+  
+  public List<FriendView> getFriends(User user) {
+    List<FriendView> friends = new ArrayList<>();
+    
+    for (Friendship f : friendRepo.getFriendshipByUserAndStatus(user, Friendship.Status.FRIEND)) {
+      friends.add(getFriendView(user, getCompanion(f, user).getId()));
+    }
+    
+    return friends;
+  }
 }

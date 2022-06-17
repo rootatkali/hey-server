@@ -1,0 +1,538 @@
+@startuml
+set namespaceSeparator ::
+
+abstract class "hey::api::api_client.dart::ApiClient" {
+  +Future<User> createUser()
+  +Future<User> login()
+  +Future<HttpResponse<User>> loginResponse()
+  +Future<void> logout()
+  +Future<User> getMe()
+  +Future<User> editMe()
+  +Future<LatLon> getMyLocation()
+  +Future<LatLon> postLocation()
+  +Future<List<User>> getUsers()
+  +Future<User> getUser()
+  +Future<List<School>> getSchools()
+  +Future<bool> isVerified()
+  +Future<User> verifyMashov()
+  +Future<User> manuallySetSchool()
+  +Future<List<Interest>> getInterests()
+  +Future<Interest> addInterest()
+  +Future<List<Interest>> getMyInterests()
+  +Future<List<Interest>> setMyInterests()
+  +Future<List<FriendView>> getMatches()
+}
+
+class "hey::api::api_client.dart::_ApiClient" {
+  -Dio _dio
+  +String? baseUrl
+  +Future<User> createUser()
+  +Future<User> login()
+  +Future<HttpResponse<User>> loginResponse()
+  +Future<void> logout()
+  +Future<User> getMe()
+  +Future<User> editMe()
+  +Future<LatLon> getMyLocation()
+  +Future<LatLon> postLocation()
+  +Future<List<User>> getUsers()
+  +Future<User> getUser()
+  +Future<List<School>> getSchools()
+  +Future<bool> isVerified()
+  +Future<User> verifyMashov()
+  +Future<User> manuallySetSchool()
+  +Future<List<Interest>> getInterests()
+  +Future<Interest> addInterest()
+  +Future<List<Interest>> getMyInterests()
+  +Future<List<Interest>> setMyInterests()
+  +Future<List<FriendView>> getMatches()
+  -RequestOptions _setStreamType()
+}
+
+"hey::api::api_client.dart::_ApiClient" o-- "dio::src::dio.dart::Dio"
+"hey::api::api_client.dart::ApiClient" <|-- "hey::api::api_client.dart::_ApiClient"
+
+class "hey::api::chat_service.dart::ChatService" {
+  +Future<ChatModule> registerChat()
+}
+
+"hey::util::log.dart::Log" <|-- "hey::api::chat_service.dart::ChatService"
+
+class "hey::api::chat_service.dart::ChatModule" {
+  +User user
+  -StompClient _client
+  +Stream<ChatNotification> createQueueStream()
+  +void sendMessage()
+}
+
+"hey::api::chat_service.dart::ChatModule" o-- "hey::model::user.dart::User"
+"hey::api::chat_service.dart::ChatModule" o-- "stomp_dart_client::stomp.dart::StompClient"
+"hey::util::log.dart::Log" <|-- "hey::api::chat_service.dart::ChatModule"
+
+class "hey::api::cookie_interceptor.dart::CookieInterceptor" {
+  -SharedPreferences? _prefs
+  {static} +String key
+  +Logger logger
+  +void onRequest()
+  +void onResponse()
+}
+
+"hey::api::cookie_interceptor.dart::CookieInterceptor" o-- "shared_preferences::shared_preferences.dart::SharedPreferences"
+"hey::api::cookie_interceptor.dart::CookieInterceptor" o-- "logger::src::logger.dart::Logger"
+"dio::src::dio_mixin.dart::Interceptor" <|-- "hey::api::cookie_interceptor.dart::CookieInterceptor"
+
+class "hey::api::endpoints.dart::Endpoints" {
+  {static} +String baseUrl
+  {static} +String socketUri
+  {static} +String getUsers
+  {static} +String getUser
+  {static} +String createUser
+  {static} +String login
+  {static} +String getMe
+  {static} +String editMe
+  {static} +String getLocation
+  {static} +String setLocation
+  {static} +String logout
+  {static} +String getSchools
+  {static} +String isVerified
+  {static} +String verifyMashov
+  {static} +String manualSchool
+  {static} +String getInterests
+  {static} +String addInterest
+  {static} +String getMyInterests
+  {static} +String setMyInterests
+  {static} +String getMatches
+  {static} +String placeholderImage
+  {static} +String sendMessage
+  {static} +String getMessage
+  {static} +dynamic userPicture()
+  {static} +dynamic messageQueue()
+}
+
+class "hey::api::location_service.dart::LocationService" {
+  -GooglePlace _place
+  -GoogleGeocoding _geocoding
+  +Future<LatLon> fetchLocation()
+}
+
+"hey::api::location_service.dart::LocationService" o-- "google_place::google_place.dart::GooglePlace"
+"hey::api::location_service.dart::LocationService" o-- "google_geocoding::google_geocoding.dart::GoogleGeocoding"
+"hey::util::log.dart::Log" <|-- "hey::api::location_service.dart::LocationService"
+
+class "hey::main.dart::HeyApp" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "hey::main.dart::HeyApp"
+
+class "hey::model::chat_message.dart::Message" {
+  +String? id
+  +String? chat
+  +MessageType? type
+  +MessageStatus? status
+  +Uint8List body
+  +String sender
+  +String recipient
+  +Map<String, dynamic> toJson()
+}
+
+"hey::model::chat_message.dart::Message" o-- "hey::model::chat_message.dart::MessageType"
+"hey::model::chat_message.dart::Message" o-- "hey::model::chat_message.dart::MessageStatus"
+"hey::model::chat_message.dart::Message" o-- "dart::typed_data::Uint8List"
+
+class "hey::model::chat_message.dart::MessageType" {
+  +int index
+  {static} +List<MessageType> values
+  {static} +MessageType publicKey
+  {static} +MessageType text
+  {static} +MessageType blob
+  {static} +MessageType receipt
+}
+
+"hey::model::chat_message.dart::MessageType" o-- "hey::model::chat_message.dart::MessageType"
+"dart::core::Enum" <|-- "hey::model::chat_message.dart::MessageType"
+
+class "hey::model::chat_message.dart::MessageStatus" {
+  +int index
+  {static} +List<MessageStatus> values
+  {static} +MessageStatus sent
+  {static} +MessageStatus delivered
+  {static} +MessageStatus seen
+}
+
+"hey::model::chat_message.dart::MessageStatus" o-- "hey::model::chat_message.dart::MessageStatus"
+"dart::core::Enum" <|-- "hey::model::chat_message.dart::MessageStatus"
+
+class "hey::model::chat_notification.dart::ChatNotification" {
+  +String id
+  +String senderId
+  +String senderName
+  +Map<String, dynamic> toJson()
+}
+
+class "hey::model::friend_view.dart::FriendView" {
+  +String id
+  +String username
+  +String firstName
+  +String lastName
+  +String? status
+  +bool initiated
+  +String bio
+  +School school
+  +List<Interest> interests
+  +String? hometown
+  +double distance
+  +int grade
+  +String gender
+  +double matchScore
+  +String name
+  +Map<String, dynamic> toJson()
+  +String toString()
+}
+
+"hey::model::friend_view.dart::FriendView" o-- "hey::model::school.dart::School"
+
+class "hey::model::interest.dart::Interest" {
+  +String id
+  +String name
+  +Map<String, dynamic> toJson()
+  +String toString()
+}
+
+class "hey::model::latlon.dart::LatLon" {
+  +double lat
+  +double lon
+  +Map<String, dynamic> toJson()
+  +String toString()
+}
+
+class "hey::model::login.dart::Login" {
+  +String username
+  +String password
+  +Map<String, dynamic> toJson()
+}
+
+class "hey::model::mashov_login.dart::MashovLogin" {
+  +int semel
+  +int year
+  +String username
+  +String password
+  +Map<String, dynamic> toJson()
+}
+
+class "hey::model::school.dart::School" {
+  +int id
+  +String name
+  +String? town
+  +int hashCode
+  +Map<String, dynamic> toJson()
+  +String toString()
+  +bool ==()
+}
+
+class "hey::model::user.dart::User" {
+  +String? id
+  +String? username
+  +String? firstName
+  +String? lastName
+  +String? phoneNum
+  +String? email
+  +String? hometown
+  +DateTime? birthdate
+  +int? grade
+  +String? gender
+  +String? bio
+  +String name
+  +Map<String, dynamic> toJson()
+}
+
+class "hey::model::user_registration.dart::UserRegistration" {
+  +String? username
+  +String? password
+  +String? email
+  +String? firstName
+  +String? lastName
+  +String? phoneNum
+  +DateTime? birthdate
+  +Map<String, dynamic> toJson()
+}
+
+class "hey::ui::chat_page.dart::ChatPage" {
+  {static} +String path
+  +State<ChatPage> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "hey::ui::chat_page.dart::ChatPage"
+
+class "hey::ui::chat_page.dart::_ChatPageState" {
+  +User? user
+  -List<ChatNotification> _notifications
+  +ChatModule chat
+  +void initState()
+  +Widget build()
+}
+
+"hey::ui::chat_page.dart::_ChatPageState" o-- "hey::model::user.dart::User"
+"hey::ui::chat_page.dart::_ChatPageState" o-- "hey::api::chat_service.dart::ChatModule"
+"flutter::src::widgets::framework.dart::State" <|-- "hey::ui::chat_page.dart::_ChatPageState"
+
+class "hey::ui::details_page.dart::DetailsPage" {
+  {static} +String path
+  +State<DetailsPage> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "hey::ui::details_page.dart::DetailsPage"
+"hey::util::log.dart::Log" <|-- "hey::ui::details_page.dart::DetailsPage"
+
+class "hey::ui::details_page.dart::_DetailsPageState" {
+  -int _step
+  -User _user
+  -TextEditingController _bio
+  -Map<String, TextEditingController> _address
+  +Widget build()
+  -Widget _controls()
+  -void _finish()
+  -void _submitAddress()
+  -void _next()
+}
+
+"hey::ui::details_page.dart::_DetailsPageState" o-- "hey::model::user.dart::User"
+"hey::ui::details_page.dart::_DetailsPageState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter::src::widgets::framework.dart::State" <|-- "hey::ui::details_page.dart::_DetailsPageState"
+
+class "hey::ui::friend.dart::Friend" {
+  +ImageProvider<Object> profilePicture
+  +String name
+  +FriendStatus status
+  +void Function() onPressed
+  +Widget callToAction
+  +Widget build()
+}
+
+"hey::ui::friend.dart::Friend" o-- "flutter::src::painting::image_provider.dart::ImageProvider<Object>"
+"hey::ui::friend.dart::Friend" o-- "hey::ui::friend.dart::FriendStatus"
+"hey::ui::friend.dart::Friend" o-- "dart::ui::void Function()"
+"hey::ui::friend.dart::Friend" o-- "flutter::src::widgets::framework.dart::Widget"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "hey::ui::friend.dart::Friend"
+
+class "hey::ui::friend.dart::FriendStatus" {
+  +int index
+  {static} +List<FriendStatus> values
+  {static} +FriendStatus online
+  {static} +FriendStatus away
+  {static} +FriendStatus doNotDisturb
+  {static} +FriendStatus offline
+}
+
+"hey::ui::friend.dart::FriendStatus" o-- "hey::ui::friend.dart::FriendStatus"
+"dart::core::Enum" <|-- "hey::ui::friend.dart::FriendStatus"
+
+class "hey::ui::friend_page.dart::FriendPage" {
+  {static} +String path
+  +State<FriendPage> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "hey::ui::friend_page.dart::FriendPage"
+"hey::util::log.dart::Log" <|-- "hey::ui::friend_page.dart::FriendPage"
+
+class "hey::ui::friend_page.dart::_FriendPageState" {
+  +Widget build()
+  -Widget _title()
+  -Widget _content()
+  -Widget _divider()
+  -Widget _generateCta()
+}
+
+"flutter::src::widgets::framework.dart::State" <|-- "hey::ui::friend_page.dart::_FriendPageState"
+
+class "hey::ui::friend_page.dart::_Cta" {
+  +String title
+  +IconData icon
+  +void Function(FriendView)? callback
+}
+
+"hey::ui::friend_page.dart::_Cta" o-- "flutter::src::widgets::icon_data.dart::IconData"
+"hey::ui::friend_page.dart::_Cta" o-- "null::void Function(FriendView)"
+
+class "hey::ui::home_page.dart::HomePage" {
+  {static} +String path
+  +State<StatefulWidget> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "hey::ui::home_page.dart::HomePage"
+"hey::util::log.dart::Log" <|-- "hey::ui::home_page.dart::HomePage"
+
+class "hey::ui::home_page.dart::_HomePageState" {
+  -User? _user
+  +void initState()
+  -void _login()
+  -void _fetchUser()
+  +Widget build()
+  -void _profile()
+  -void _logout()
+  -Widget _generatePendingRequests()
+  -Widget _generateFriendList()
+  -Widget _generateSuggestions()
+  -Future<List<FriendView>> _fetchSuggestions()
+  -void _openFriendPage()
+}
+
+"hey::ui::home_page.dart::_HomePageState" o-- "hey::model::user.dart::User"
+"flutter::src::widgets::framework.dart::State" <|-- "hey::ui::home_page.dart::_HomePageState"
+
+class "hey::ui::interest_picker.dart::InterestPicker" {
+  +State<InterestPicker> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "hey::ui::interest_picker.dart::InterestPicker"
+
+class "hey::ui::interest_picker.dart::_InterestPickerState" {
+  {static} -String _newInterestPrefix
+  {static} -String _newInterestId
+  -Set<Interest> _selected
+  -List<Interest> _available
+  +void initState()
+  +Widget build()
+  -void _saveInterests()
+  -void _interestSelected()
+}
+
+"flutter::src::widgets::framework.dart::State" <|-- "hey::ui::interest_picker.dart::_InterestPickerState"
+
+class "hey::ui::login_page.dart::LoginPage" {
+  {static} +String path
+  +State<StatefulWidget> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "hey::ui::login_page.dart::LoginPage"
+"hey::util::log.dart::Log" <|-- "hey::ui::login_page.dart::LoginPage"
+
+class "hey::ui::login_page.dart::_LoginPageState" {
+  -TextEditingController _user
+  -TextEditingController _pass
+  -bool _loading
+  +Widget build()
+  +void login()
+  +void register()
+}
+
+"hey::ui::login_page.dart::_LoginPageState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter::src::widgets::framework.dart::State" <|-- "hey::ui::login_page.dart::_LoginPageState"
+
+class "hey::ui::register_page.dart::RegisterPage" {
+  {static} +String path
+  +State<RegisterPage> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "hey::ui::register_page.dart::RegisterPage"
+"hey::util::log.dart::Log" <|-- "hey::ui::register_page.dart::RegisterPage"
+
+class "hey::ui::register_page.dart::_RegisterPageState" {
+  -GlobalKey<FormState> _form
+  -TextEditingController _user
+  -TextEditingController _pass
+  -TextEditingController _email
+  -TextEditingController _firstName
+  -TextEditingController _lastName
+  -TextEditingController _phone
+  +Widget build()
+  +void register()
+}
+
+"hey::ui::register_page.dart::_RegisterPageState" o-- "flutter::src::widgets::framework.dart::GlobalKey<FormState>"
+"hey::ui::register_page.dart::_RegisterPageState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter::src::widgets::framework.dart::State" <|-- "hey::ui::register_page.dart::_RegisterPageState"
+
+class "hey::ui::splash_page.dart::SplashPage" {
+  {static} +String path
+  +State<SplashPage> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "hey::ui::splash_page.dart::SplashPage"
+
+class "hey::ui::splash_page.dart::_SplashPageState" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::State" <|-- "hey::ui::splash_page.dart::_SplashPageState"
+
+class "hey::ui::verify_page.dart::VerifyPage" {
+  {static} +String path
+  +State<VerifyPage> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "hey::ui::verify_page.dart::VerifyPage"
+"hey::util::log.dart::Log" <|-- "hey::ui::verify_page.dart::VerifyPage"
+
+class "hey::ui::verify_page.dart::_VerifyPageState" {
+  -int _step
+  -bool _loading
+  -School? _selected
+  -User? _callback
+  -TextEditingController _user
+  -TextEditingController _pass
+  -List<School> _schools
+  +void initState()
+  +Widget build()
+  -Widget _controls()
+  -void _validateSchool()
+  -void _mashovLogin()
+  -void _advance()
+}
+
+"hey::ui::verify_page.dart::_VerifyPageState" o-- "hey::model::school.dart::School"
+"hey::ui::verify_page.dart::_VerifyPageState" o-- "hey::model::user.dart::User"
+"hey::ui::verify_page.dart::_VerifyPageState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter::src::widgets::framework.dart::State" <|-- "hey::ui::verify_page.dart::_VerifyPageState"
+
+class "hey::util::constants.dart::Constants" {
+  {static} +ApiClient api
+  {static} +LocationService locationService
+}
+
+"hey::util::constants.dart::Constants" o-- "hey::api::api_client.dart::ApiClient"
+"hey::util::constants.dart::Constants" o-- "hey::api::location_service.dart::LocationService"
+
+class "hey::util::json_converter.dart::ListToUint8ListConverter" {
+  +Uint8List fromJson()
+  +List<int> toJson()
+}
+
+"json_annotation::src::json_converter.dart::JsonConverter" <|-- "hey::util::json_converter.dart::ListToUint8ListConverter"
+
+class "hey::util::log.dart::CompactPrinter" {
+  +String source
+  +List<String> log()
+}
+
+"logger::src::log_printer.dart::LogPrinter" <|-- "hey::util::log.dart::CompactPrinter"
+
+class "hey::util::log.dart::PlainPrinter" {
+  +List<String> log()
+}
+
+"logger::src::log_printer.dart::LogPrinter" <|-- "hey::util::log.dart::PlainPrinter"
+
+abstract class "hey::util::log.dart::Log" {
+  +Logger log
+}
+
+"hey::util::log.dart::Log" o-- "logger::src::logger.dart::Logger"
+
+class "hey::util::step_advancer.dart::StepAdvancer" {
+  +String text
+  +void Function() onClick
+  +Widget asButton()
+}
+
+"hey::util::step_advancer.dart::StepAdvancer" o-- "null::void Function()"
+
+class "hey::util::validator.dart::Validator" {
+  {static} +String? validateUsername()
+  {static} +String? validateName()
+  {static} +String? validateEmail()
+  {static} +String? validatePhoneNumber()
+  {static} +String? validatePassword()
+}
+
+
+@enduml

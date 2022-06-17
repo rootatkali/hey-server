@@ -21,7 +21,7 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class MashovService {
+public class MashovService implements ExternalService {
   private final RestTemplate restTemplate;
   private final Gson gson;
   private final DataConverter dataConverter;
@@ -39,7 +39,7 @@ public class MashovService {
     this.schoolRepo = schoolRepo;
     this.gson = new Gson();
     
-    schoolRepo.saveAll(fetchSchools());
+    fetchSchools();
   }
   
   private Map<String, Object> loginMap(int semel, int year, String username, String password) {
@@ -62,6 +62,7 @@ public class MashovService {
     return map;
   }
   
+  @Override
   public List<School> fetchSchools() {
     HttpHeaders headers = new HttpHeaders();
     headers.setAccept(List.of(MediaType.APPLICATION_JSON));
@@ -71,7 +72,8 @@ public class MashovService {
     
     ResponseEntity<String> response = restTemplate.exchange(MASHOV_URL + "/schools", HttpMethod.GET, entity, String.class);
     
-    TypeToken<List<Map<String, Object>>> typeToken = new TypeToken<>() {};
+    TypeToken<List<Map<String, Object>>> typeToken = new TypeToken<>() {
+    };
     
     List<Map<String, Object>> map = gson.fromJson(response.getBody(), typeToken.getType());
     
@@ -79,6 +81,8 @@ public class MashovService {
     
     if (map != null)
       map.forEach(m -> ret.add(new School(((Double) m.get("semel")).intValue(), (String) m.get("name"), null)));
+    
+    schoolRepo.saveAll(ret);
     
     return ret;
   }
@@ -92,6 +96,7 @@ public class MashovService {
    * @param password The user's password
    * @return An {@link ExternalDetails} with details about the user
    */
+  @Override
   public ExternalDetails fetchDetails(int semel, int year, String username, String password) {
     var map = loginMap(semel, year, username, password);
     

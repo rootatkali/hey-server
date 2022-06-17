@@ -49,57 +49,57 @@ public class UserService {
   
   /**
    * Provides a PATCH method for the user entity.
-   * @param db The user, as fetched from the database
+   * @param user The user, as fetched from the database
    * @param edit The requested edits to the user
-   * @return <code>db</code>, after being edited accordingly
+   * @return <code>user</code>, after being edited accordingly
    */
-  public User editUser(User db, User edit) {
+  public User editUser(User user, User edit) {
     if (edit.getUsername() != null) {
       validator.validateUsername(edit.getUsername());
-      db.setUsername(edit.getUsername());
+      user.setUsername(edit.getUsername());
     }
     
     if (edit.getFirstName() != null) {
       validator.validateName(edit.getFirstName());
-      db.setFirstName(Xss.deXss(edit.getFirstName()));
+      user.setFirstName(Xss.deXss(edit.getFirstName()));
     }
     
     if (edit.getLastName() != null) {
       validator.validateName(edit.getLastName());
-      db.setFirstName(Xss.deXss(edit.getLastName()));
+      user.setFirstName(Xss.deXss(edit.getLastName()));
     }
     
     if (edit.getPhoneNum() != null) {
       validator.validatePhoneNumber(edit.getPhoneNum());
-      db.setPhoneNum(edit.getPhoneNum());
+      user.setPhoneNum(edit.getPhoneNum());
     }
     
     if (edit.getEmail() != null) {
       validator.validateEmail(edit.getEmail());
-      db.setEmail(edit.getEmail());
+      user.setEmail(edit.getEmail());
     }
     
     if (edit.getHometown() != null) {
       validator.validateName(edit.getHometown());
-      db.setHometown(edit.getHometown());
+      user.setHometown(edit.getHometown());
     }
     
     if (edit.getGrade() != null && edit.getGrade() != 0) {
       validator.validateGrade(edit.getGrade());
-      db.setGrade(edit.getGrade());
+      user.setGrade(edit.getGrade());
     }
     
     if (edit.getGender() != null && edit.getGender() != '\u0000') {
       validator.validateGender(edit.getGender());
-      db.setGender(edit.getGender());
+      user.setGender(edit.getGender());
     }
     
     if (edit.getBio() != null) {
       validator.validateBio(edit.getBio());
-      db.setBio(Xss.deXss(edit.getBio()));
+      user.setBio(Xss.deXss(edit.getBio()));
     }
     
-    return userRepo.save(db);
+    return userRepo.save(user);
   }
   
   /**

@@ -102,6 +102,10 @@ public final class User {
     this.lastName = lastName;
   }
   
+  public String getFullName() {
+    return String.format("%s %s", firstName, lastName);
+  }
+  
   public String getPhoneNum() {
     return phoneNum;
   }
