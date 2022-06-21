@@ -61,12 +61,6 @@ public class GeneralApiController {
     // return userService.getUsers();
   }
   
-  @GetMapping("/users/{id}")
-  public User getUser(@PathVariable String id) {
-    throw new ResponseStatusException(HttpStatus.FORBIDDEN); // todo permissions
-    // return userService.getUser(id);
-  }
-  
   @PostMapping(path = "/users", consumes = "application/json")
   public User registerUser(@RequestBody UserRegistration registration, HttpServletResponse res) {
     Token t = authService.registerUser(registration);
@@ -81,6 +75,13 @@ public class GeneralApiController {
     
     // set cookie
     return tokenAndUser(res, t);
+  }
+  
+  @GetMapping("/users/{id}")
+  public User getUser(@CookieValue(name = "token", required = false) String token, @PathVariable String id) {
+    authService.validateAccessToken(token);
+    
+    return userService.getUser(id);
   }
   
   @GetMapping("/me")
@@ -213,7 +214,7 @@ public class GeneralApiController {
   private FriendView status(String token, String user, Friendship.Status status) {
     User u = getMe(token);
   
-    User friend = getUser(user);
+    User friend = getUser(token, user);
   
     return friendService.updateStatus(u, friend, status);
   }
@@ -243,7 +244,7 @@ public class GeneralApiController {
   public String retrieveKey(@CookieValue(name = "token", required = false) String token, @PathVariable String user) {
     User u = getMe(token);
     
-    User friend = getUser(user);
+    User friend = getUser(token, user);
     return userService.retrievePublicKey(friend);
   }
   
