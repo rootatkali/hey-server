@@ -1,7 +1,9 @@
 package me.rootatkali.hey.service;
 
+import me.rootatkali.hey.chat.PublicKey;
 import me.rootatkali.hey.model.*;
 import me.rootatkali.hey.repo.LocationRepository;
+import me.rootatkali.hey.repo.PublicKeyRepository;
 import me.rootatkali.hey.repo.UserPreferencesRepository;
 import me.rootatkali.hey.repo.UserRepository;
 import me.rootatkali.hey.util.Error;
@@ -14,16 +16,19 @@ public class UserService {
   private final UserRepository userRepo;
   private final UserPreferencesRepository userPrefsRepo;
   private final LocationRepository locationRepo;
+  private final PublicKeyRepository keyRepo;
   private final Validator validator;
   
   @Autowired
   public UserService(UserRepository userRepo,
                      UserPreferencesRepository userPrefsRepo,
                      LocationRepository locationRepo,
+                     PublicKeyRepository keyRepo,
                      Validator validator) {
     this.userRepo = userRepo;
     this.userPrefsRepo = userPrefsRepo;
     this.locationRepo = locationRepo;
+    this.keyRepo = keyRepo;
     this.validator = validator;
   }
   
@@ -122,5 +127,13 @@ public class UserService {
   
   public Location getLocation(User user) {
     return user.getLocation();
+  }
+  
+  public PublicKey storePublicKey(User user, String jwk) {
+    return keyRepo.save(new PublicKey(user.getId(), jwk));
+  }
+  
+  public String retrievePublicKey(User user) {
+    return keyRepo.findById(user.getId()).orElseThrow(Error.NOT_FOUND).getJwk();
   }
 }

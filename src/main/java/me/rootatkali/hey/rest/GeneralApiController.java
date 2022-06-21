@@ -2,6 +2,7 @@ package me.rootatkali.hey.rest;
 
 import lombok.extern.slf4j.Slf4j;
 import me.rootatkali.hey.HeyApplication;
+import me.rootatkali.hey.chat.PublicKey;
 import me.rootatkali.hey.external.VerificationService;
 import me.rootatkali.hey.model.*;
 import me.rootatkali.hey.service.AuthService;
@@ -230,6 +231,20 @@ public class GeneralApiController {
   @PutMapping("/friends/{user}/reject")
   public FriendView rejectFriend(@CookieValue(name = "token", required = false) String token, @PathVariable String user) {
     return status(token, user, Friendship.Status.REJECTED);
+  }
+  
+  @PostMapping("/key")
+  public PublicKey storeKey(@CookieValue(name = "token", required = false) String token, @RequestBody String jwk) {
+    User u = getMe(token);
+    return userService.storePublicKey(u, jwk);
+  }
+  
+  @GetMapping("/key/{user}")
+  public String retrieveKey(@CookieValue(name = "token", required = false) String token, @PathVariable String user) {
+    User u = getMe(token);
+    
+    User friend = getUser(user);
+    return userService.retrievePublicKey(friend);
   }
   
   @PostMapping("/logout")
