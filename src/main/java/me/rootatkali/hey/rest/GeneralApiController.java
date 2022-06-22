@@ -2,13 +2,14 @@ package me.rootatkali.hey.rest;
 
 import lombok.extern.slf4j.Slf4j;
 import me.rootatkali.hey.HeyApplication;
-import me.rootatkali.hey.chat.PublicKey;
+import me.rootatkali.hey.chat.*;
 import me.rootatkali.hey.external.VerificationService;
 import me.rootatkali.hey.model.*;
 import me.rootatkali.hey.service.AuthService;
 import me.rootatkali.hey.service.FriendService;
 import me.rootatkali.hey.service.SchoolService;
 import me.rootatkali.hey.service.UserService;
+import me.rootatkali.hey.util.Error;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,18 +32,24 @@ public class GeneralApiController {
   private final UserService userService;
   private final VerificationService verificationService;
   private final FriendService friendService;
+  private final ChatService chatService;
+  private final MessageService messageService;
   
   @Autowired
   public GeneralApiController(UserService userService,
                               AuthService authService,
                               SchoolService schoolService,
                               VerificationService verificationService,
-                              FriendService friendService) {
+                              FriendService friendService,
+                              ChatService chatService,
+                              MessageService messageService) {
     this.userService = userService;
     this.authService = authService;
     this.schoolService = schoolService;
     this.verificationService = verificationService;
     this.friendService = friendService;
+    this.chatService = chatService;
+    this.messageService = messageService;
   }
   
   private User tokenAndUser(HttpServletResponse res, Token t) {
@@ -246,6 +253,32 @@ public class GeneralApiController {
     
     User friend = getUser(token, user);
     return userService.retrievePublicKey(friend);
+  }
+  
+  @GetMapping("/chats/{chatee}")
+  public List<Message> findChatHistory(@CookieValue(name = "token", required = false) String token,
+                                       @PathVariable String chatee) {
+    User u = authService.validateAccessToken(token);
+    Chat chat = chatService.getChat(u.getId(), chatee);
+    if (!chat.containsUser(u.getId())) throw Error.FORBIDDEN.get();
+    
+    // Get the other participant's id
+    String sender = u.getId().equals(chat.getUser1()) ? chat.getUser2() : chat.getUser1();
+    
+    // Update the status of the messages, and return the messages (two queries)
+//    messageService.updateStatus(chat, sender, u.getId(), MessageStatus.DELIVERED);
+    return messageService.findChatHistory(chat);
+  }
+  
+  @GetMapping("/messages/{id}")
+  public Message findMessage(@CookieValue(name = "token", required = false) String token,
+                             @PathVariable String id) {
+    User u = authService.validateAccessToken(token);
+    
+    Message msg = messageService.findMessage(id);
+    
+    if (msg.getSender().equals(u.getId()) || msg.getRecipient().equals(u.getId())) return msg;
+    throw Error.FORBIDDEN.get();
   }
   
   @PostMapping("/logout")

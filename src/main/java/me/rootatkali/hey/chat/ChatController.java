@@ -55,30 +55,4 @@ public class ChatController {
         saved.getId(), saved.getSender(), userService.getUser(saved.getId()).getFullName()
     ));
   }
-  
-  @GetMapping("/api/chats/{chatee}")
-  public List<Message> findChatHistory(@CookieValue(name = "token", required = false) String token,
-                                       @PathVariable String chatee) {
-    User u = authService.validateAccessToken(token);
-    Chat chat = chatService.getChat(u.getId(), chatee);
-    if (!chat.containsUser(u.getId())) throw Error.FORBIDDEN.get();
-    
-    // Get the other participant's id
-    String sender = u.getId().equals(chat.getUser1()) ? chat.getUser2() : chat.getUser1();
-    
-    // Update the status of the messages, and return the messages (two queries)
-//    messageService.updateStatus(chat, sender, u.getId(), MessageStatus.DELIVERED);
-    return messageService.findChatHistory(chat);
-  }
-  
-  @GetMapping("/api/messages/{id}")
-  public Message findMessage(@CookieValue(name = "token", required = false) String token,
-                             @PathVariable String id) {
-    User u = authService.validateAccessToken(token);
-    
-    Message msg = messageService.findMessage(id);
-    
-    if (msg.getSender().equals(u.getId()) || msg.getRecipient().equals(u.getId())) return msg;
-    throw Error.FORBIDDEN.get();
-  }
 }
