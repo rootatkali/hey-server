@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class MessageService {
@@ -20,7 +21,7 @@ public class MessageService {
   
   public Message saveMessage(Message message) {
     message.setStatus(MessageStatus.SENT);
-    
+    message.setId(UUID.randomUUID().toString());
     return messageRepo.save(message);
   }
   
