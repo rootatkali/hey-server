@@ -56,7 +56,7 @@ public class ChatController {
     ));
   }
   
-  @GetMapping("/chats/{chatee}")
+  @GetMapping("/api/chats/{chatee}")
   public List<Message> findChatHistory(@CookieValue(name = "token", required = false) String token,
                                        @PathVariable String chatee) {
     User u = authService.validateAccessToken(token);
@@ -71,7 +71,7 @@ public class ChatController {
     return messageService.findChatHistory(chat);
   }
   
-  @GetMapping("/messages/{id}")
+  @GetMapping("/api/messages/{id}")
   public Message findMessage(@CookieValue(name = "token", required = false) String token,
                              @PathVariable String id) {
     User u = authService.validateAccessToken(token);
