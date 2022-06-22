@@ -67,7 +67,7 @@ public class ChatController {
     String sender = u.getId().equals(chat.getUser1()) ? chat.getUser2() : chat.getUser1();
     
     // Update the status of the messages, and return the messages (two queries)
-    messageService.updateStatus(chat, sender, u.getId(), MessageStatus.DELIVERED);
+//    messageService.updateStatus(chat, sender, u.getId(), MessageStatus.DELIVERED);
     return messageService.findChatHistory(chat);
   }
   
