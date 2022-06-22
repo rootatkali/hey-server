@@ -112,7 +112,7 @@ public class UserService {
    *
    * @deprecated To remove before production
    */
-  @Deprecated(forRemoval = true)
+  @Deprecated
   public User setSchool(User user, School school) {
     user.setSchool(school);
     return userRepo.save(user);

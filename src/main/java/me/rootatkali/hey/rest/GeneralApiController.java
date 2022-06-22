@@ -231,6 +231,14 @@ public class GeneralApiController {
     return status(token, user, Friendship.Status.PENDING);
   }
   
+  @DeleteMapping("/friends/{user}")
+  public FriendView deleteRequest(@CookieValue(name = "token", required = false) String token, @PathVariable String user) {
+    User u = getMe(token);
+    User friend = getUser(token, user);
+    
+    return friendService.deleteRequest(u, friend);
+  }
+  
   @PutMapping("/friends/{user}/approve")
   public FriendView approveFriend(@CookieValue(name = "token", required = false) String token, @PathVariable String user) {
     return status(token, user, Friendship.Status.FRIEND);

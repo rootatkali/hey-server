@@ -7,6 +7,7 @@ import me.rootatkali.hey.repo.FriendshipRepository;
 import me.rootatkali.hey.repo.InterestRepository;
 import me.rootatkali.hey.repo.UserPreferencesRepository;
 import me.rootatkali.hey.repo.UserRepository;
+import me.rootatkali.hey.util.Error;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -223,6 +224,15 @@ public class FriendService {
     entry.setStatus(status);
     
     friendRepo.save(entry);
+    
+    return getFriendView(user, friend.getId());
+  }
+  
+  public FriendView deleteRequest(User user, User friend) {
+    Friendship entry = friendRepo.findByTwoUsers(user, friend).orElseThrow(Error.BAD_REQUEST);
+    if (entry.getStatus() != Friendship.Status.PENDING || !entry.getInvitor().equals(user)) throw Error.FORBIDDEN.get();
+    
+    friendRepo.delete(entry);
     
     return getFriendView(user, friend.getId());
   }
